@@ -1,5 +1,42 @@
 # Changelog
 
+## [3.2.10](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/compare/v3.2.9...v3.2.10) (2026-08-07)
+
+
+### Bug Fixes
+
+* **deps:** Update Dependabot commit message configuration ([1643548](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/commit/16435488acbf2cc08f106b90a5491cb3e6222d06))
+
+## [3.2.9](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/compare/v3.2.8...v3.2.9) (2026-06-30)
+
+
+### Bug Fixes
+
+* push to force release for update to OTel version ([f97835a](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/commit/f97835add9a620117d439a3a2f3233ee42a28e2d))
+
+## [3.2.8](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/compare/v3.2.7...v3.2.8) (2026-06-27)
+
+
+### Bug Fixes
+
+* Merge pull request [#38](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/issues/38) from gangadhar-res/fix/paginate-workflow-jobs ([dbbc960](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/commit/dbbc960e24998780d0ab4746789463c117a92ee4))
+* paginate workflow jobs to capture all jobs in large runs ([dbbc960](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/commit/dbbc960e24998780d0ab4746789463c117a92ee4))
+* paginate workflow jobs to capture all jobs in large runs ([783aa55](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/commit/783aa55a2ac91590a82a7873c5c588f5e275635c))
+
+## [3.2.7](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/compare/v3.2.6...v3.2.7) (2026-04-28)
+
+
+### Bug Fixes
+
+* update checkout version in actions ([2ed48c1](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/commit/2ed48c15e3c8de75d2cab01c3233401a92f08200))
+
+## [3.2.6](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/compare/v3.2.5...v3.2.6) (2026-04-28)
+
+
+### Bug Fixes
+
+* Update release-please-action version ([aa45f70](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/commit/aa45f70de5e7a9c583a94764240a9aa9720f1deb))
+
 ## [3.2.5](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/compare/v3.2.4...v3.2.5) (2025-04-07)
 
 
