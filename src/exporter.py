@@ -1,8 +1,12 @@
 from ghapi.all import GhApi
 from custom_parser import do_time,do_fastcore_decode,parse_attributes,check_env_vars
+import http.client
 import json
 import logging
 import os
+import random
+import time
+import urllib.error
 import opentelemetry.semconv._incubating.attributes.cicd_attributes as cicd_semconv
 from opentelemetry import trace
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
@@ -63,11 +67,43 @@ if OTEL_EXPORTER_OTLP_HEADERS:
         if key and value:
             headers[key] = value
 
+# api.github.com flakiness (5xx, dropped connections) aborts this export
+# outright, so every outbound GitHub call below goes through with_retries.
+# 4xx are never retried: fastcore raises those as ExceptionsHTTP subclasses of
+# HTTPError, so the e.code check below excludes them.
+RETRY_ATTEMPTS = 5
+RETRY_BASE_SECONDS = 1.0
+RETRY_MAX_SECONDS = 30.0
+# Per-read timeout, not a total download budget: a healthy log.zip keeps bytes
+# flowing, while a hung connection now fails fast into a retry.
+LOGS_TIMEOUT_SECONDS = 60
+RETRYABLE_ERRORS = (urllib.error.URLError, http.client.HTTPException, ConnectionError, TimeoutError,
+                    requests.exceptions.ConnectionError, requests.exceptions.Timeout)
+
+def is_retryable(e):
+    if isinstance(e, urllib.error.HTTPError):
+        return e.code >= 500
+    if isinstance(e, requests.exceptions.HTTPError):
+        return e.response is not None and e.response.status_code >= 500
+    return isinstance(e, RETRYABLE_ERRORS)
+
+def with_retries(what, call):
+    for attempt in range(1, RETRY_ATTEMPTS + 1):
+        try:
+            return call()
+        except Exception as e:
+            if attempt == RETRY_ATTEMPTS or not is_retryable(e):
+                raise
+            # Full jitter: sleep uniformly in [0, capped exponential backoff).
+            delay = random.uniform(0, min(RETRY_MAX_SECONDS, RETRY_BASE_SECONDS * 2 ** (attempt - 1)))
+            print(f"{what} failed (attempt {attempt}/{RETRY_ATTEMPTS}): {e} -> retrying in {delay:.1f}s")
+            time.sleep(delay)
+
 # Github API client
 api = GhApi(owner=GITHUB_REPOSITORY_OWNER, repo=GITHUB_REPOSITORY_NAME.split('/')[1], token=str(ACTION_TOKEN))
 
 # Github API calls
-get_workflow_run_by_run_id = do_fastcore_decode(api.actions.get_workflow_run(WORKFLOW_RUN_ID))
+get_workflow_run_by_run_id = with_retries("get_workflow_run", lambda: do_fastcore_decode(api.actions.get_workflow_run(WORKFLOW_RUN_ID)))
 
 # Page through all jobs. GitHub paginates the list-jobs endpoint at 30 per
 # page by default, so any workflow with more than 30 jobs would silently
@@ -77,7 +113,8 @@ all_jobs = []
 last_page = None
 page_num = 1
 while True:
-    page_resp = do_fastcore_decode(api.actions.list_jobs_for_workflow_run(WORKFLOW_RUN_ID, per_page=100, page=page_num))
+    page_resp = with_retries(f"list_jobs_for_workflow_run page {page_num}",
+                             lambda: do_fastcore_decode(api.actions.list_jobs_for_workflow_run(WORKFLOW_RUN_ID, per_page=100, page=page_num)))
     last_page = json.loads(page_resp)
     page_jobs = last_page.get("jobs", [])
     all_jobs.extend(page_jobs)
@@ -155,7 +192,14 @@ req_headers = {
 logs_url=GITHUB_API_URL+"/repos/"+GITHUB_REPOSITORY_NAME.split("/")[0]+"/"+GITHUB_REPOSITORY_NAME.split("/")[1]+"/actions/runs/"+str(WORKFLOW_RUN_ID)+"/logs"
 
 print(f"Fetching Logs from: {logs_url}")
-r1=requests.get(logs_url,headers=req_headers)
+
+def get_logs():
+    # raise_for_status so a 5xx body isn't written out as a corrupt log.zip.
+    resp = requests.get(logs_url, headers=req_headers, timeout=LOGS_TIMEOUT_SECONDS)
+    resp.raise_for_status()
+    return resp
+
+r1=with_retries("logs download", get_logs)
 
 with open("log.zip",'wb') as output_file:
     output_file.write(r1.content)

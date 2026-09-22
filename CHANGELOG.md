@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.2.11](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/compare/v3.2.10...v3.2.11) (2026-09-03)
+
+
+### Bug Fixes
+
+* retry GitHub API calls on 5xx and connection failures ([2afd87a](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/commit/2afd87a939de21e95ee12486b332cd21789f6ee2))
+* retry GitHub API calls on 5xx and connection failures ([6d9ccaf](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/commit/6d9ccafaf40ee0d33581cc49f9cdd4f14dd434de))
+
 ## [3.2.10](https://github.com/StephenGoodall/OTLP-GitHubAction-Exporter/compare/v3.2.9...v3.2.10) (2026-08-07)
 
 
